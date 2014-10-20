@@ -50,7 +50,7 @@ class Target : public content::DevToolsTarget {
     return agent_host_->GetTitle();
   }
   virtual std::string GetDescription() const OVERRIDE { return std::string(); }
-  virtual GURL GetURL() const OVERRIDE { return url_; }
+  virtual GURL GetURL() const OVERRIDE { return  agent_host_->GetURL(); }
   virtual GURL GetFaviconURL() const OVERRIDE { return favicon_url_; }
   virtual base::TimeTicks GetLastActivityTime() const OVERRIDE {
     return last_activity_time_;
@@ -69,7 +69,6 @@ class Target : public content::DevToolsTarget {
   scoped_refptr<DevToolsAgentHost> agent_host_;
   std::string id_;
   std::string title_;
-  GURL url_;
   GURL favicon_url_;
   base::TimeTicks last_activity_time_;
 };
@@ -86,19 +85,11 @@ Target::Target(scoped_refptr<content::DevToolsAgentHost> agent_host)
 }
 
 bool Target::Activate() const {
-  WebContents* web_contents = agent_host_->GetWebContents();
-  if (!web_contents)
-    return false;
-  web_contents->GetDelegate()->ActivateContents(web_contents);
-  return true;
+  return agent_host_->Activate();
 }
 
 bool Target::Close() const {
-  RenderViewHost* rvh = agent_host_->GetWebContents()->GetRenderViewHost();
-  if (!rvh)
-    return false;
-  rvh->ClosePage();
-  return true;
+  return agent_host_->Close();
 }
 
 }  // namespace

@@ -415,6 +415,7 @@ void XWalkContentBrowserClient::GetStoragePartitionConfigForSite(
 
 content::DevToolsManagerDelegate*
   XWalkContentBrowserClient::GetDevToolsManagerDelegate() {
+  LOG(INFO) << "GetDevToolsManagerDelegate!!!!!!!!!!!!!!!!!" << runtime_context_;
   return new XWalkDevToolsDelegate(runtime_context_);
 }
 
