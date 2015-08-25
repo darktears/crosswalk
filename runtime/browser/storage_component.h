@@ -7,6 +7,7 @@
 
 #include "xwalk/runtime/browser/xwalk_component.h"
 #include "xwalk/experimental/native_file_system/native_file_system_extension.h"
+#include "xwalk/experimental/dotnet/dotnet_extension.h"
 
 namespace xwalk {
 
@@ -22,6 +23,7 @@ class StorageComponent : public XWalkComponent {
       extensions::XWalkExtensionVector* extensions) override;
 
   experimental::NativeFileSystemExtension* native_file_system_extension_;
+  experimental::DotNetExtension* dotnet_extension_;
 };
 
 }  // namespace xwalk

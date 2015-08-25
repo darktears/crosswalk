@@ -380,6 +380,9 @@
           ],
         }],
         ['OS=="win"', {
+          'dependencies': [
+            'experimental/dotnet/xwalk_dotnet.gyp:xwalk_cplusplus',
+          ],
           'configurations': {
             'Debug_Base': {
               'msvs_settings': {
