@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace XWalk.ClrAssembly
+namespace xwalk.experimental
 {
   public partial class DialogBox : Form
   {

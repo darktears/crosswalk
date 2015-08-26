@@ -105,22 +105,6 @@ void DotNetInstance::HandleMessage(scoped_ptr<base::Value> msg) {
 
 void DotNetInstance::HandleSyncMessage(
     scoped_ptr<base::Value> msg) {
-
-  base::DictionaryValue* dict;
-  std::string command;
-  if (!msg->GetAsDictionary(&dict) || !dict->GetString("cmd", &command)) {
-    LOG(ERROR) << "Fail to handle command sync message.";
-    SendSyncReplyToJS(scoped_ptr<base::Value>(new base::StringValue("")));
-    return;
-  }
-
-  if (command == "SayHello") {
-    std::string message;
-    dict->GetString("message", &message);
-    hello_clr_->SayHelloSync(message.c_str());
-    scoped_ptr<base::Value> result(new base::StringValue(""));
-    SendSyncReplyToJS(result.Pass());
-  }
 }
 
 }  // namespace experimental

@@ -27,11 +27,10 @@ class NATIVEDLL_API CHello
    void PostMessageToJS(const char* message);
  private:
   void* hello_clr_;
+  void* pointer_callback_;
   void* instance_;
   PostMessageToJSFunc callback_js_;
 };
-
-extern "C" NATIVEDLL_API void CallPostMessageToJS(CHello* instance, const char* message);
 
 }
 }

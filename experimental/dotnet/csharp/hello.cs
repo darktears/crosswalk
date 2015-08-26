@@ -1,40 +1,36 @@
 using System;
+using System.Reflection;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
-namespace XWalk.ClrAssembly
+namespace xwalk.experimental
 {
   public class Hello
   {
-    [DllImport("xwalk_mixeddll.dll")]
-    static public extern void CallPostMessageToJS(IntPtr pointer, string message);
-
-    public Hello(IntPtr parent)
+    public Hello()
     {
       Application.EnableVisualStyles();
       Application.SetCompatibleTextRenderingDefault(false);
       System.Console.WriteLine("Created .NET Instance!");
-      nativeObject = parent;
     }
 
-    public void SayHelloSync(string message)
-    {
-      DialogBox dialog = new DialogBox(this);
-      dialog.showDialogSync(message);
+    public void setCallback(object obj) {
+      nativeCallback = obj;
     }
+
     public void SayHelloASync(string message)
     {
       DialogBox dialog = new DialogBox(this);
       dialog.showDialogASync(message);
-      //MessageBox.Show(message, "I'm a dialog created with .NET");
     }
 
     public void PostMessageToJS(string message)
     {
       System.Console.WriteLine("Posting message to JS!");
-      CallPostMessageToJS(nativeObject, message);
+      Type callbackType = nativeCallback.GetType();
+      MethodInfo callbackMethod = callbackType.GetMethod("PostMessageToJS");
+      callbackMethod.Invoke(nativeCallback, new object[1] { message });
     }
-
-    private IntPtr nativeObject;
+    private object nativeCallback;
   }
 }
