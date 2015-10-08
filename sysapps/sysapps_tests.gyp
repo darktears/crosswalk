@@ -15,7 +15,6 @@
         'common/binding_object_store_unittest.cc',
         'common/event_target_unittest.cc',
         'common/sysapps_manager_unittest.cc',
-        'device_capabilities/av_codecs_provider_unittest.cc',
         'device_capabilities/cpu_info_provider_unittest.cc',
         'device_capabilities/display_info_provider_unittest.cc',
         'device_capabilities/memory_info_provider_unittest.cc',
