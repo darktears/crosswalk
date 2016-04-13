@@ -12,8 +12,12 @@
 #include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/json/json_reader.h"
 #include "base/message_loop/message_loop.h"
+#include "base/path_service.h"
+#include "base/strings/string_split.h"
 #include "base/strings/string_number_conversions.h"
+#include "base/strings/utf_string_conversions.h"
 #include "cc/base/switches.h"
 #include "components/devtools_http_handler/devtools_http_handler.h"
 #include "content/public/browser/browser_thread.h"
@@ -61,6 +65,8 @@
 #endif
 
 namespace {
+
+const size_t kTraceStartupFileSizeLimit = 64 * 1024;
 
 // FIXME: Compare with method in startup_browser_creator.cc.
 GURL GetURLFromCommandLine(const base::CommandLine& command_line) {
@@ -208,6 +214,11 @@ void XWalkBrowserMainParts::PreMainMessageLoopRun() {
 #endif
 
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+#if !defined (OS_ANDROID)
+  if (startup_url_.is_empty())
+    ReadStartupFile(command_line);
+#endif
+
   if (command_line->HasSwitch(switches::kRemoteDebuggingPort)) {
     std::string port_str =
         command_line->GetSwitchValueASCII(switches::kRemoteDebuggingPort);
@@ -235,6 +246,7 @@ void XWalkBrowserMainParts::PreMainMessageLoopRun() {
   }
 
   application::ApplicationSystem* app_system = xwalk_runner_->app_system();
+
   run_default_message_loop_ = app_system->LaunchFromCommandLine(
       *command_line, startup_url_);
   // If the |ui_task| is specified in main function parameter, it indicates
@@ -249,6 +261,64 @@ void XWalkBrowserMainParts::PreMainMessageLoopRun() {
 #if defined(USE_AURA)
   InstallXWalkJavaScriptNativeDialogFactory();
 #endif
+}
+
+void XWalkBrowserMainParts::ReadStartupFile(base::CommandLine* command_line) {
+  base::FilePath startup_file;
+#if defined(OS_MACOSX)
+  NSString* startup_path =
+      [base::mac::FrameworkBundle() pathForResource:@"startup" ofType:@"json"];
+
+  startup_file = FilePath([startup_path fileSystemRepresentation]);
+#else
+  base::FilePath app_dir;
+  PathService::Get(base::DIR_MODULE, &app_dir);
+  DCHECK(!app_dir.empty());
+
+  startup_file = app_dir.Append(FILE_PATH_LITERAL("startup.json"));
+#endif
+  std::string startup_config_file_content;
+  if (!base::ReadFileToString(startup_file,
+                              &startup_config_file_content,
+                              kTraceStartupFileSizeLimit)) {
+    DLOG(WARNING) << "Cannot read the startup config file correctly.";
+    return;
+  }
+  scoped_ptr<base::Value> value = base::JSONReader::Read(
+      startup_config_file_content);
+  if (!value || !value->IsType(base::Value::TYPE_DICTIONARY))
+    return;
+
+  scoped_ptr<base::DictionaryValue> dict(
+      static_cast<base::DictionaryValue*>(value.release()));
+
+  base::DictionaryValue* startup_config_dict = NULL;
+  if (!dict->GetDictionary("startup", &startup_config_dict))
+    return;
+
+  std::string manifest_path;
+  std::string command_line_arguments;
+  for (base::DictionaryValue::Iterator it(*startup_config_dict);
+      !it.IsAtEnd(); it.Advance()) {
+    if (it.key() == "manifest_path")
+      it.value().GetAsString(&manifest_path);
+    else if (it.key() == "command_line")
+      it.value().GetAsString(&command_line_arguments);
+  }
+  std::vector<std::string> arguments = base::SplitString(
+      command_line_arguments, " ",
+      base::TRIM_WHITESPACE, base::SPLIT_WANT_ALL);
+  for (auto argument : arguments)
+      command_line->AppendSwitch(argument);
+
+  command_line->AppendSwitch(command_line_arguments);
+  base::FilePath path(base::UTF8ToUTF16(manifest_path));
+  if (!path.IsAbsolute()) {
+    // MakeAbsoluteFilePath is confused in Centennial.
+    path = app_dir.Append(path);
+  }
+
+  startup_url_ = GURL(net::FilePathToFileURL(path));
 }
 
 bool XWalkBrowserMainParts::MainMessageLoopRun(int* result_code) {

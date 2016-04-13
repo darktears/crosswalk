@@ -86,6 +86,7 @@ class XWalkBrowserMainParts : public content::BrowserMainParts {
   scoped_ptr<devtools_http_handler::DevToolsHttpHandler> devtools_http_handler_;
 
  private:
+  void ReadStartupFile(base::CommandLine* command_line);
 #if defined(USE_AURA)
   scoped_ptr<wm::WMState> wm_state_;
 #endif
